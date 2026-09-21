@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 import tempfile
 from typing import Optional
@@ -13,6 +14,17 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 TEMP_DIR = os.path.join(BASE_DIR, "temp_uploads")
 os.makedirs(STATIC_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
+
+# Load precomputed sample cache for instant responses on cloud/Render free tier
+SAMPLE_CACHE = {}
+cache_file = os.path.join(BASE_DIR, "sample_cache.json")
+if os.path.exists(cache_file):
+    try:
+        with open(cache_file, "r") as f:
+            SAMPLE_CACHE = json.load(f)
+        print(f"Loaded {len(SAMPLE_CACHE)} precomputed samples from cache.")
+    except Exception as e:
+        print(f"Notice: could not load sample cache: {e}")
 
 app = FastAPI(
     title="Deepfake Detection - FaceForensics++ Lab",
@@ -50,7 +62,7 @@ RESEARCH_ASSETS = {
     "sample_fake_video": "gradcam_fake_output.mp4"
 }
 
-@app.api_route("/", methods=["GET", "HEAD"])
+@app.get("/")
 def read_root():
     index_path = os.path.join(STATIC_DIR, "index.html")
     if os.path.exists(index_path):
@@ -66,7 +78,7 @@ def get_research_asset(asset_name: str):
         return FileResponse(file_path, media_type=media_type)
     raise HTTPException(status_code=404, detail="Asset not found")
 
-@app.api_route("/api/health", methods=["GET", "HEAD"])
+@app.get("/api/health")
 def get_health():
     return {
         "status": "online",
@@ -264,6 +276,17 @@ async def predict_sample(
     generate_heatmap: bool = Form(True),
     threshold: float = Form(0.50)
 ):
+    # If cached, return immediately with dynamic threshold recalculation
+    if sample_id in SAMPLE_CACHE and not apply_mask:
+        cached = dict(SAMPLE_CACHE[sample_id])
+        avg_prob = cached.get("fake_probability", 0.5)
+        verdict = "FAKE" if avg_prob >= threshold else "REAL"
+        confidence = (avg_prob if verdict == "FAKE" else (1.0 - avg_prob)) * 100.0
+        cached["verdict"] = verdict
+        cached["confidence"] = round(confidence, 2)
+        cached["threshold_used"] = threshold
+        return cached
+
     filename = RESEARCH_ASSETS.get(sample_id)
     if not filename:
         raise HTTPException(status_code=404, detail="Unknown sample ID")

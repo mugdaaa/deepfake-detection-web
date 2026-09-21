@@ -255,8 +255,20 @@ async function handleAnalyze() {
     }
 
     if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.detail || 'Inference failed');
+      let errorMsg = `Server returned status ${response.status}`;
+      try {
+        const err = await response.json();
+        errorMsg = err.detail || err.message || errorMsg;
+      } catch (jsonErr) {
+        if (response.status === 504) {
+          errorMsg = 'Server Timeout (504): The cloud CPU took longer than 60s. Please try again with fewer frames (3-5) or test using the preloaded sample buttons!';
+        } else if (response.status === 502) {
+          errorMsg = 'Server Restarting (502): The cloud instance is spinning up or reached memory limit. Please retry in a few seconds.';
+        } else {
+          errorMsg = `Server HTTP Error ${response.status}: ${response.statusText}`;
+        }
+      }
+      throw new Error(errorMsg);
     }
 
     const result = await response.json();

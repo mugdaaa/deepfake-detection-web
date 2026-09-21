@@ -205,7 +205,9 @@ class DeepfakeDetector:
                 "fallback_crop": True
             })
         else:
-            for idx, (x, y, fw, fh) in enumerate(boxes):
+            # Sort boxes by area descending and process top 2 most prominent faces for speed
+            sorted_boxes = sorted(boxes, key=lambda b: b[2] * b[3], reverse=True)[:2]
+            for idx, (x, y, fw, fh) in enumerate(sorted_boxes):
                 # Add slight margin to capture face boundary artifacts
                 margin = int(0.15 * max(fw, fh))
                 x1 = max(0, x - margin)
@@ -259,7 +261,7 @@ class DeepfakeDetector:
             cap.release()
             raise ValueError("Video has 0 frames or is corrupt")
 
-        frame_indices = np.linspace(0, total_frames - 1, min(num_frames, total_frames), dtype=int)
+        frame_indices = np.linspace(0, total_frames - 1, min(max(3, num_frames), min(8, total_frames)), dtype=int)
         
         frames_data = []
         all_probs = []
