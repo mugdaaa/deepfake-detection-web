@@ -211,7 +211,7 @@ def get_metrics():
     }
 
 @app.post("/api/predict")
-async def predict_media(
+def predict_media(
     file: UploadFile = File(...),
     num_frames: int = Form(10),
     apply_mask: bool = Form(False),
@@ -269,7 +269,7 @@ async def predict_media(
                 pass
 
 @app.post("/api/predict-sample")
-async def predict_sample(
+def predict_sample(
     sample_id: str = Form(...),
     num_frames: int = Form(10),
     apply_mask: bool = Form(False),
