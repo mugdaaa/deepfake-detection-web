@@ -1,0 +1,24 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Temp uploads & data
+temp_uploads/
+extracted_faces/
+manipulated_sequences/
+original_sequences/
+debug_frame.jpg
+
+# Large external models & landmark dat
+shape_predictor_68_face_landmarks.dat
+xception_model.h5
+svm_model.pkl
+
+# Virtual environment & IDE
+venv/
+.venv/
+env/
+.vscode/
+.idea/

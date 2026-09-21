@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VeritasAI // Deepfake Detection & Explainability Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            cyber: {
+              950: '#070A12',
+              900: '#0D1322',
+              850: '#111A30',
+              800: '#16223F',
+              700: '#1F315B',
+              accent: '#38BDF8',
+              emerald: '#10B981',
+              rose: '#F43F5E',
+              amber: '#F59E0B'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="bg-cyber-950 text-slate-100 font-sans min-h-screen antialiased flex flex-col selection:bg-cyber-accent selection:text-cyber-950">
+
+  <!-- Background Decorative Grid and Glows -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="cyber-grid absolute inset-0 opacity-20"></div>
+    <div class="glow-orb top-[-10%] left-[20%] bg-sky-600/15"></div>
+    <div class="glow-orb bottom-[-10%] right-[15%] bg-rose-600/10"></div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header class="relative z-20 border-b border-cyber-800/80 bg-cyber-900/80 backdrop-blur-xl sticky top-0 px-4 lg:px-8 py-3.5 transition-all">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 p-0.5 shadow-lg shadow-sky-500/20 flex items-center justify-center">
+            <div class="w-full h-full bg-cyber-900 rounded-[10px] flex items-center justify-center">
+              <i data-lucide="shield-alert" class="w-5 h-5 text-sky-400"></i>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-extrabold tracking-tight text-lg bg-gradient-to-r from-sky-400 via-indigo-300 to-white bg-clip-text text-transparent">VeritasAI</span>
+              <span class="text-[10px] font-mono tracking-widest px-2 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 uppercase font-semibold">Vision Lab</span>
+            </div>
+            <p class="text-xs text-slate-400 font-mono">FaceForensics++ Deepfake Detection & Explainability</p>
+          </div>
+        </div>
+
+        <!-- Mobile Status Pill -->
+        <div class="md:hidden flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Online</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1.5 p-1 bg-cyber-950/70 border border-cyber-800 rounded-xl overflow-x-auto max-w-full">
+        <button onclick="switchTab('studio')" id="tab-btn-studio" class="nav-tab active flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all whitespace-nowrap">
+          <i data-lucide="scan" class="w-4 h-4"></i>
+          <span>Detection Studio</span>
+        </button>
+        <button onclick="switchTab('explainability')" id="tab-btn-explainability" class="nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all whitespace-nowrap text-slate-400 hover:text-white">
+          <i data-lucide="flame" class="w-4 h-4"></i>
+          <span>Grad-CAM Explainability</span>
+        </button>
+        <button onclick="switchTab('benchmarks')" id="tab-btn-benchmarks" class="nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all whitespace-nowrap text-slate-400 hover:text-white">
+          <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+          <span>Research Benchmarks</span>
+        </button>
+        <button onclick="switchTab('about')" id="tab-btn-about" class="nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all whitespace-nowrap text-slate-400 hover:text-white">
+          <i data-lucide="book-open" class="w-4 h-4"></i>
+          <span>Methodology</span>
+        </button>
+      </nav>
+
+      <!-- Desktop System Status -->
+      <div class="hidden md:flex items-center gap-3 font-mono text-xs">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyber-850 border border-cyber-700/60 shadow-inner">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-slate-300">EfficientNet-B0 + SAM</span>
+          <span class="text-slate-500">|</span>
+          <span class="text-emerald-400 font-semibold">95.33% Best</span>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="relative z-10 flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 space-y-8">
+
+    <!-- ==================== TAB 1: DETECTION STUDIO ==================== -->
+    <section id="tab-studio" class="tab-pane space-y-8">
+      
+      <!-- Studio Hero Header -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-cyber-800 pb-6">
+        <div>
+          <div class="inline-flex items-center gap-2 text-xs font-mono text-sky-400 bg-sky-500/10 border border-sky-500/20 px-3 py-1 rounded-full mb-3">
+            <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+            <span>Deep Learning Facial Boundary & Synthesis Analysis</span>
+          </div>
+          <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight text-white">Interactive Deepfake Detection Studio</h1>
+          <p class="text-sm text-slate-400 mt-1 max-w-2xl">Upload any video or portrait image to extract faces, detect subtle spatial manipulation artifacts, and generate real-time Grad-CAM attention heatmaps.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-mono text-slate-400">Quick Test Samples:</span>
+          <button onclick="loadSample('sample_fake_video')" class="btn-sample px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 text-xs font-mono font-medium flex items-center gap-1.5 transition">
+            <i data-lucide="play-circle" class="w-3.5 h-3.5"></i>
+            <span>Fake Video</span>
+          </button>
+          <button onclick="loadSample('sample_real_video')" class="btn-sample px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 text-xs font-mono font-medium flex items-center gap-1.5 transition">
+            <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+            <span>Real Video</span>
+          </button>
+          <button onclick="loadSample('face_extraction_sample')" class="btn-sample px-3 py-1.5 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400 hover:bg-sky-500/20 text-xs font-mono font-medium flex items-center gap-1.5 transition">
+            <i data-lucide="image" class="w-3.5 h-3.5"></i>
+            <span>Test Image</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Studio Main Grid: Upload & Controls + Live Analysis Panel -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Media Input & Configuration (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+
+          <!-- Drag and Drop Upload Card -->
+          <div class="glass-card rounded-2xl p-6 relative overflow-hidden border border-cyber-700/60">
+            <h2 class="text-sm font-semibold tracking-wider text-slate-300 uppercase font-mono mb-4 flex items-center gap-2">
+              <i data-lucide="upload-cloud" class="w-4 h-4 text-sky-400"></i>
+              <span>Media Input</span>
+            </h2>
+
+            <div id="drop-zone" class="border-2 border-dashed border-cyber-700 hover:border-sky-500/80 rounded-xl p-8 text-center transition-all cursor-pointer bg-cyber-900/40 hover:bg-cyber-850/60 group relative">
+              <input type="file" id="file-input" class="hidden" accept="video/mp4,video/avi,video/quicktime,video/webm,image/jpeg,image/png,image/webp">
+              
+              <div id="drop-prompt" class="space-y-3">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-cyber-800 border border-cyber-700 flex items-center justify-center text-slate-400 group-hover:text-sky-400 group-hover:scale-110 group-hover:border-sky-500/40 transition-all duration-300 shadow-lg">
+                  <i data-lucide="film" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-white">Click to upload or drag & drop</p>
+                  <p class="text-xs text-slate-400 mt-1 font-mono">MP4, AVI, MOV, WEBM, JPG, PNG (up to 100MB)</p>
+                </div>
+              </div>
+
+              <!-- Media Preview Container (hidden until loaded) -->
+              <div id="media-preview" class="hidden space-y-3">
+                <div class="relative rounded-lg overflow-hidden bg-black max-h-56 flex items-center justify-center border border-cyber-700">
+                  <video id="preview-video" class="hidden max-h-56 w-full object-contain" controls></video>
+                  <img id="preview-image" class="hidden max-h-56 w-full object-contain" alt="Preview">
+                  <button id="btn-remove-media" type="button" class="absolute top-2 right-2 p-1.5 rounded-full bg-cyber-950/80 hover:bg-rose-600 text-slate-300 hover:text-white transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                  </button>
+                </div>
+                <div class="flex items-center justify-between text-xs font-mono text-slate-300">
+                  <span id="preview-filename" class="truncate max-w-[200px]">sample.mp4</span>
+                  <span id="preview-filesize" class="text-slate-500">2.4 MB</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Analysis Parameters Card -->
+          <div class="glass-card rounded-2xl p-6 border border-cyber-700/60 space-y-5">
+            <h2 class="text-sm font-semibold tracking-wider text-slate-300 uppercase font-mono flex items-center gap-2">
+              <i data-lucide="sliders" class="w-4 h-4 text-indigo-400"></i>
+              <span>Inspection Parameters</span>
+            </h2>
+
+            <!-- Video Frames Sample Slider -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-slate-300 flex items-center gap-1.5">
+                  <i data-lucide="layers" class="w-3.5 h-3.5 text-sky-400"></i>
+                  <span>Sample Frames (Video):</span>
+                </span>
+                <span id="num-frames-val" class="text-sky-400 font-bold px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30">10 Frames</span>
+              </div>
+              <input type="range" id="num-frames-slider" min="3" max="25" value="10" step="1" class="cyber-slider w-full">
+              <p class="text-[11px] text-slate-500">Evenly samples across the video timeline to detect temporal and face swap inconsistencies.</p>
+            </div>
+
+            <!-- Elliptical Background Masking Toggle (Paper Feature) -->
+            <div class="flex items-center justify-between p-3 rounded-xl bg-cyber-900/60 border border-cyber-800">
+              <div class="space-y-0.5 pr-2">
+                <label for="apply-mask-toggle" class="text-xs font-medium text-white flex items-center gap-1.5 cursor-pointer">
+                  <i data-lucide="focus" class="w-3.5 h-3.5 text-amber-400"></i>
+                  <span>Elliptical Background Masking</span>
+                </label>
+                <p class="text-[11px] text-slate-400 leading-tight">Removes background noise; isolates pure facial skin and boundary pixels (from Cell 30).</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                <input type="checkbox" id="apply-mask-toggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-cyber-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+              </label>
+            </div>
+
+            <!-- Grad-CAM Heatmap Generation Toggle -->
+            <div class="flex items-center justify-between p-3 rounded-xl bg-cyber-900/60 border border-cyber-800">
+              <div class="space-y-0.5 pr-2">
+                <label for="gradcam-toggle" class="text-xs font-medium text-white flex items-center gap-1.5 cursor-pointer">
+                  <i data-lucide="flame" class="w-3.5 h-3.5 text-rose-400"></i>
+                  <span>Grad-CAM Explainability Heatmaps</span>
+                </label>
+                <p class="text-[11px] text-slate-400 leading-tight">Generate gradient activation heatmaps pinpointing exact manipulated facial regions.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                <input type="checkbox" id="gradcam-toggle" checked class="sr-only peer">
+                <div class="w-11 h-6 bg-cyber-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+              </label>
+            </div>
+
+            <!-- Decision Threshold Slider -->
+            <div class="space-y-2 pt-2 border-t border-cyber-800">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-slate-300">Classification Threshold:</span>
+                <span id="threshold-val" class="text-indigo-400 font-bold px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/30">0.50 (Standard)</span>
+              </div>
+              <input type="range" id="threshold-slider" min="0.30" max="0.70" value="0.50" step="0.05" class="cyber-slider w-full">
+              <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+                <span>0.35 (Celeb-DF Generalization)</span>
+                <span>0.50 (FaceForensics++)</span>
+                <span>0.65 (Conservative)</span>
+              </div>
+            </div>
+
+            <!-- Submit CTA Button -->
+            <button id="btn-analyze" type="button" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-600 to-sky-600 hover:from-sky-400 hover:via-indigo-500 hover:to-sky-500 text-white font-bold tracking-wide text-sm shadow-lg shadow-sky-500/25 transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed">
+              <i data-lucide="scan-face" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+              <span id="btn-analyze-text">Analyze Media for Deepfakes</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Results & Explainability Viewport (7 cols) -->
+        <div class="lg:col-span-7 space-y-6">
+
+          <!-- Initial Empty Placeholder State -->
+          <div id="results-empty" class="glass-card rounded-2xl p-12 border border-cyber-700/60 flex flex-col items-center justify-center text-center space-y-4 min-h-[520px]">
+            <div class="w-20 h-20 rounded-3xl bg-cyber-850 border border-cyber-700/80 flex items-center justify-center text-slate-500 shadow-inner">
+              <i data-lucide="shield-check" class="w-10 h-10 text-slate-400"></i>
+            </div>
+            <div class="max-w-md space-y-2">
+              <h3 class="text-lg font-bold text-white tracking-tight">Detection Studio Ready</h3>
+              <p class="text-xs text-slate-400 leading-relaxed">Select a media file or click one of the quick test samples above. The model will run face extraction, spatial attention feature analysis, and Grad-CAM explainability.</p>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-2 pt-4">
+              <span class="px-3 py-1 rounded-full bg-cyber-850 border border-cyber-700 text-[11px] text-slate-400 font-mono">FaceForensics++ c23</span>
+              <span class="px-3 py-1 rounded-full bg-cyber-850 border border-cyber-700 text-[11px] text-slate-400 font-mono">Spatial Attention (SAM)</span>
+              <span class="px-3 py-1 rounded-full bg-cyber-850 border border-cyber-700 text-[11px] text-slate-400 font-mono">Grad-CAM Heatmaps</span>
+            </div>
+          </div>
+
+          <!-- Loading State (Scanner Animation) -->
+          <div id="results-loading" class="hidden glass-card rounded-2xl p-12 border border-cyber-700/60 flex flex-col items-center justify-center text-center space-y-6 min-h-[520px]">
+            <div class="relative w-24 h-24">
+              <div class="absolute inset-0 rounded-full border-4 border-sky-500/20 border-t-sky-400 animate-spin"></div>
+              <div class="absolute inset-3 rounded-full border-4 border-indigo-500/20 border-b-indigo-400 animate-spin animate-reverse"></div>
+              <div class="absolute inset-0 flex items-center justify-center text-sky-400">
+                <i data-lucide="scan" class="w-8 h-8 animate-pulse"></i>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <h3 class="text-lg font-bold text-white tracking-tight" id="loading-step-title">Analyzing Media Frames...</h3>
+              <p class="text-xs text-slate-400 font-mono" id="loading-step-desc">Extracting facial landmarks and computing spatial attention tensors</p>
+            </div>
+            <div class="w-64 bg-cyber-850 rounded-full h-2 overflow-hidden border border-cyber-700">
+              <div class="bg-gradient-to-r from-sky-400 to-indigo-500 h-full rounded-full animate-progress"></div>
+            </div>
+          </div>
+
+          <!-- Results Container (hidden initially) -->
+          <div id="results-content" class="hidden space-y-6">
+
+            <!-- Primary Verdict Banner -->
+            <div id="verdict-banner" class="rounded-2xl p-6 border transition-all relative overflow-hidden">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <span id="verdict-status-icon"></span>
+                    <h2 id="verdict-title" class="text-2xl lg:text-3xl font-black tracking-tight uppercase">MANIPULATED (FAKE)</h2>
+                  </div>
+                  <p id="verdict-explanation" class="text-xs text-slate-300 max-w-lg">High confidence facial warping artifacts detected across frames.</p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                  <div class="text-[10px] font-mono uppercase tracking-widest text-slate-400">Model Confidence</div>
+                  <div id="verdict-confidence" class="text-3xl lg:text-4xl font-black font-mono tracking-tight">94.8%</div>
+                </div>
+              </div>
+
+              <!-- Probability Bar -->
+              <div class="mt-5 space-y-1.5 relative z-10">
+                <div class="flex justify-between text-xs font-mono">
+                  <span class="text-slate-400">Fake Probability:</span>
+                  <span id="verdict-prob-value" class="font-bold">0.9482</span>
+                </div>
+                <div class="w-full bg-cyber-950/80 rounded-full h-3 p-0.5 border border-white/10 overflow-hidden">
+                  <div id="verdict-prob-bar" class="h-full rounded-full transition-all duration-700" style="width: 50%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Key Metric Metrics Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="glass-card rounded-xl p-3.5 border border-cyber-800 text-center">
+                <span class="text-[10px] font-mono text-slate-400 uppercase">Faces Found</span>
+                <p id="metric-faces-count" class="text-xl font-bold font-mono text-white mt-1">1</p>
+              </div>
+              <div class="glass-card rounded-xl p-3.5 border border-cyber-800 text-center">
+                <span class="text-[10px] font-mono text-slate-400 uppercase">Frames Analyzed</span>
+                <p id="metric-frames-count" class="text-xl font-bold font-mono text-sky-400 mt-1">10</p>
+              </div>
+              <div class="glass-card rounded-xl p-3.5 border border-cyber-800 text-center">
+                <span class="text-[10px] font-mono text-slate-400 uppercase">Duration / Size</span>
+                <p id="metric-media-info" class="text-xl font-bold font-mono text-indigo-400 mt-1">12.4s</p>
+              </div>
+              <div class="glass-card rounded-xl p-3.5 border border-cyber-800 text-center">
+                <span class="text-[10px] font-mono text-slate-400 uppercase">Threshold</span>
+                <p id="metric-threshold" class="text-xl font-bold font-mono text-amber-400 mt-1">0.50</p>
+              </div>
+            </div>
+
+            <!-- Side-by-Side Face & Grad-CAM Inspector Modal/Card -->
+            <div id="inspector-card" class="glass-card rounded-2xl p-6 border border-cyber-700/60 space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="eye" class="w-4 h-4 text-sky-400"></i>
+                  <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono">Facial Attention & Grad-CAM Inspector</h3>
+                </div>
+                <span id="inspector-badge" class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-cyber-800 border border-cyber-700 text-slate-300">Frame #1</span>
+              </div>
+
+              <!-- Side by Side Visuals -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Original Face Crop -->
+                <div class="space-y-2 text-center">
+                  <span class="text-xs font-mono text-slate-400">Original / Masked Face Crop</span>
+                  <div class="aspect-square rounded-xl overflow-hidden bg-cyber-900 border border-cyber-700 flex items-center justify-center p-1">
+                    <img id="inspector-original-img" src="" alt="Face Crop" class="w-full h-full object-cover rounded-lg">
+                  </div>
+                </div>
+                <!-- Grad-CAM Attention Heatmap -->
+                <div class="space-y-2 text-center">
+                  <div class="flex items-center justify-center gap-1.5 text-xs font-mono text-rose-400">
+                    <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+                    <span>Grad-CAM Activation Heatmap</span>
+                  </div>
+                  <div class="aspect-square rounded-xl overflow-hidden bg-cyber-900 border border-cyber-700 flex items-center justify-center p-1 relative">
+                    <img id="inspector-heatmap-img" src="" alt="Grad-CAM Heatmap" class="w-full h-full object-cover rounded-lg">
+                    <div class="absolute bottom-3 left-3 right-3 px-2 py-1 rounded bg-cyber-950/90 border border-white/10 text-[10px] font-mono text-slate-300 text-center backdrop-blur">
+                      Warmer colors (Red/Yellow) show manipulation focal points
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Individual Frame Score Breakdown -->
+              <div class="p-3 rounded-xl bg-cyber-900/60 border border-cyber-800 flex items-center justify-between text-xs font-mono">
+                <span class="text-slate-400">Current Frame Fake Likelihood:</span>
+                <span id="inspector-frame-prob" class="font-bold text-sky-400">92.4%</span>
+              </div>
+            </div>
+
+            <!-- Frame-by-Frame Carousel -->
+            <div class="glass-card rounded-2xl p-6 border border-cyber-700/60 space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="film" class="w-4 h-4 text-indigo-400"></i>
+                  <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono">Timeline Frame Carousel</h3>
+                </div>
+                <span class="text-xs text-slate-400">Click any frame to inspect</span>
+              </div>
+
+              <div id="frames-carousel" class="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+                <!-- Frames injected via JS -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 2: GRAD-CAM EXPLAINABILITY ==================== -->
+    <section id="tab-explainability" class="tab-pane hidden space-y-8">
+      
+      <div>
+        <div class="inline-flex items-center gap-2 text-xs font-mono text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-1 rounded-full mb-3">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>XAI // Explainable Artificial Intelligence</span>
+        </div>
+        <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight text-white">Grad-CAM Activation & Failure Analysis</h1>
+        <p class="text-sm text-slate-400 mt-1 max-w-3xl">Deep neural networks often act as black boxes. Gradient-weighted Class Activation Mapping (Grad-CAM) illuminates the exact pixel clusters that triggered the classification decision.</p>
+      </div>
+
+      <!-- Grad-CAM Methodology Explanation -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-card rounded-2xl p-6 border border-cyber-800 space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center font-mono font-bold">1</div>
+          <h3 class="text-base font-bold text-white">Gradient Tracking</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">During the forward-backward pass, gradients of the deepfake score are computed with respect to the spatial feature maps of the convolutional & attention layers.</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 border border-cyber-800 space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-mono font-bold">2</div>
+          <h3 class="text-base font-bold text-white">Spatial Pooling</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">Gradients are globally pooled across channels to generate importance weights, capturing which spatial regions contain synthesis boundaries, warping, or blending seam artifacts.</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 border border-cyber-800 space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center font-mono font-bold">3</div>
+          <h3 class="text-base font-bold text-white">Heatmap Overlay</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">The weighted 2D activations pass through a ReLU rectifier, are scaled to the input size, and mapped onto a JET colormap (Red = high attention, Blue = baseline skin).</p>
+        </div>
+      </div>
+
+      <!-- Research Findings Gallery -->
+      <div class="space-y-6">
+        <h2 class="text-lg font-bold text-white font-mono flex items-center gap-2">
+          <i data-lucide="gallery-vertical" class="w-5 h-5 text-sky-400"></i>
+          <span>FaceForensics++ Research Visualizations</span>
+        </h2>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          <!-- Grad-CAM Heatmaps Card -->
+          <div class="glass-card rounded-2xl p-6 border border-cyber-800 space-y-4">
+            <div>
+              <span class="text-xs font-mono text-sky-400 uppercase">Correct Classifications</span>
+              <h3 class="text-base font-bold text-white">Manipulation Heatmaps Across Types</h3>
+              <p class="text-xs text-slate-400 mt-1">Comparing Grad-CAM activations across Deepfakes, Face2Face, FaceSwap, and NeuralTextures.</p>
+            </div>
+            <div class="rounded-xl overflow-hidden border border-cyber-700 bg-black/50">
+              <img src="/assets/gradcam_heatmaps" alt="Grad-CAM Heatmaps" class="w-full h-auto object-cover hover:scale-105 transition-transform duration-500">
+            </div>
+          </div>
+
+          <!-- Grad-CAM Failed Cases Card -->
+          <div class="glass-card rounded-2xl p-6 border border-cyber-800 space-y-4">
+            <div>
+              <span class="text-xs font-mono text-rose-400 uppercase">Error Analysis</span>
+              <h3 class="text-base font-bold text-white">Grad-CAM on Edge & Failed Cases</h3>
+              <p class="text-xs text-slate-400 mt-1">Investigating false negatives and false positives caused by motion blur, lighting extremes, or subtle textures.</p>
+            </div>
+            <div class="rounded-xl overflow-hidden border border-cyber-700 bg-black/50">
+              <img src="/assets/gradcam_failed_cases" alt="Failed Cases" class="w-full h-auto object-cover hover:scale-105 transition-transform duration-500">
+            </div>
+          </div>
+
+          <!-- Background Masking Comparison -->
+          <div class="glass-card rounded-2xl p-6 border border-cyber-800 space-y-4">
+            <div>
+              <span class="text-xs font-mono text-amber-400 uppercase">Ablation Study</span>
+              <h3 class="text-base font-bold text-white">Elliptical Background Masking</h3>
+              <p class="text-xs text-slate-400 mt-1">Forces the model to inspect facial boundaries without background bias (hair, room decor, compression blocks).</p>
+            </div>
+            <div class="rounded-xl overflow-hidden border border-cyber-700 bg-black/50">
+              <img src="/assets/background_masking_sample" alt="Background Masking" class="w-full h-auto object-cover hover:scale-105 transition-transform duration-500">
+            </div>
+          </div>
+
+          <!-- Celeb-DF Failed Cases -->
+          <div class="glass-card rounded-2xl p-6 border border-cyber-800 space-y-4">
+            <div>
+              <span class="text-xs font-mono text-purple-400 uppercase">Cross-Dataset Generalization</span>
+              <h3 class="text-base font-bold text-white">Celeb-DF v2 Transferability</h3>
+              <p class="text-xs text-slate-400 mt-1">Higher quality fakes in Celeb-DF create challenges for models trained purely on FaceForensics++ (achieving 75.00% zero-shot).</p>
+            </div>
+            <div class="rounded-xl overflow-hidden border border-cyber-700 bg-black/50">
+              <img src="/assets/gradcam_celebdf_failed" alt="Celeb-DF Failed" class="w-full h-auto object-cover hover:scale-105 transition-transform duration-500">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 3: RESEARCH BENCHMARKS ==================== -->
+    <section id="tab-benchmarks" class="tab-pane hidden space-y-8">
+      
+      <div>
+        <div class="inline-flex items-center gap-2 text-xs font-mono text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full mb-3">
+          <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+          <span>Experimental Performance & Quantitative Findings</span>
+        </div>
+        <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight text-white">Comparative Research Benchmarks</h1>
+        <p class="text-sm text-slate-400 mt-1 max-w-3xl">Evaluation of 5 distinct architectures on FaceForensics++ (c23 compression) and cross-dataset testing on Celeb-DF v2.</p>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="glass-card rounded-2xl p-5 border border-cyber-800">
+          <span class="text-[11px] font-mono text-slate-400 uppercase">Optimal Accuracy</span>
+          <h3 class="text-2xl lg:text-3xl font-black font-mono text-emerald-400 mt-1">95.33%</h3>
+          <p class="text-[11px] text-slate-500 mt-1">Equal Ensemble (0.5 / 0.5)</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 border border-cyber-800">
+          <span class="text-[11px] font-mono text-slate-400 uppercase">Top Individual AUC</span>
+          <h3 class="text-2xl lg:text-3xl font-black font-mono text-sky-400 mt-1">0.9881</h3>
+          <p class="text-[11px] text-slate-500 mt-1">Xception Fine-Tuned</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 border border-cyber-800">
+          <span class="text-[11px] font-mono text-slate-400 uppercase">Models Benchmarked</span>
+          <h3 class="text-2xl lg:text-3xl font-black font-mono text-indigo-400 mt-1">5 Models</h3>
+          <p class="text-[11px] text-slate-500 mt-1">SVM, RF, Xcep, EffNet, Ens</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 border border-cyber-800">
+          <span class="text-[11px] font-mono text-slate-400 uppercase">Cross-Dataset Score</span>
+          <h3 class="text-2xl lg:text-3xl font-black font-mono text-amber-400 mt-1">75.00%</h3>
+          <p class="text-[11px] text-slate-500 mt-1">Celeb-DF v2 (Thresh 0.35)</p>
+        </div>
+      </div>
+
+      <!-- Interactive Chart.js Model Comparison -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <div class="lg:col-span-7 glass-card rounded-2xl p-6 border border-cyber-800 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono">Accuracy & AUC Comparison</h3>
+            <span class="text-xs text-slate-400 font-mono">FaceForensics++ Test Set</span>
+          </div>
+          <div class="h-72">
+            <canvas id="modelComparisonChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Ensemble Sensitivity Curve Card -->
+        <div class="lg:col-span-5 glass-card rounded-2xl p-6 border border-cyber-800 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono">Ensemble Weight Sensitivity</h3>
+            <span class="text-xs text-emerald-400 font-mono font-semibold">0.5/0.5 Optimal</span>
+          </div>
+          <p class="text-xs text-slate-400">Testing 6 weight combinations from 0.3/0.7 to 0.8/0.2 confirmed equal weighting achieves peak generalization.</p>
+          <div class="rounded-xl overflow-hidden border border-cyber-700 bg-black/50">
+            <img src="/assets/ensemble_sensitivity" alt="Ensemble Sensitivity" class="w-full h-auto object-cover">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Confusion Matrix Explorer -->
+      <div class="glass-card rounded-2xl p-6 border border-cyber-800 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-bold text-white font-mono">Confusion Matrix Explorer</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Inspect true positive, true negative, false positive, and false negative distributions.</p>
+          </div>
+          <div class="flex items-center gap-1.5 p-1 bg-cyber-900 border border-cyber-700 rounded-xl overflow-x-auto">
+            <button onclick="showConfusionMatrix('ensemble')" id="cm-btn-ensemble" class="cm-tab active px-3 py-1 text-xs font-mono rounded-lg transition">Ensemble</button>
+            <button onclick="showConfusionMatrix('xception')" id="cm-btn-xception" class="cm-tab px-3 py-1 text-xs font-mono rounded-lg text-slate-400 transition">Xception</button>
+            <button onclick="showConfusionMatrix('efficientnet')" id="cm-btn-efficientnet" class="cm-tab px-3 py-1 text-xs font-mono rounded-lg text-slate-400 transition">EfficientNet</button>
+            <button onclick="showConfusionMatrix('rf')" id="cm-btn-rf" class="cm-tab px-3 py-1 text-xs font-mono rounded-lg text-slate-400 transition">Random Forest</button>
+            <button onclick="showConfusionMatrix('svm')" id="cm-btn-svm" class="cm-tab px-3 py-1 text-xs font-mono rounded-lg text-slate-400 transition">SVM</button>
+          </div>
+        </div>
+
+        <div class="rounded-2xl overflow-hidden border border-cyber-700 bg-black/40 p-4 flex items-center justify-center">
+          <img id="cm-display-img" src="/assets/ensemble_confusion_matrix" alt="Confusion Matrix" class="max-h-96 w-auto object-contain rounded-lg">
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 4: METHODOLOGY & ABOUT ==================== -->
+    <section id="tab-about" class="tab-pane hidden space-y-8">
+      
+      <div>
+        <div class="inline-flex items-center gap-2 text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full mb-3">
+          <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
+          <span>Academic Research Project</span>
+        </div>
+        <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight text-white">Project Methodology & Dataset Architecture</h1>
+        <p class="text-sm text-slate-400 mt-1 max-w-3xl">Comprehensive overview of the course project, experimental design, and dataset pipeline.</p>
+      </div>
+
+      <!-- Project Metadata Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <div class="glass-card rounded-2xl p-6 border border-cyber-800 space-y-4">
+          <h3 class="text-base font-bold text-white font-mono flex items-center gap-2">
+            <i data-lucide="award" class="w-4 h-4 text-sky-400"></i>
+            <span>Course & Team Credentials</span>
+          </h3>
+          <ul class="space-y-2.5 text-xs text-slate-300 font-mono">
+            <li class="flex justify-between border-b border-cyber-800 pb-2">
+              <span class="text-slate-500">Institution:</span>
+              <span class="text-white font-semibold">Long Island University, Brooklyn</span>
+            </li>
+            <li class="flex justify-between border-b border-cyber-800 pb-2">
+              <span class="text-slate-500">Course:</span>
+              <span class="text-white font-semibold">AI688-001 Image & Vision Computing</span>
+            </li>
+            <li class="flex justify-between border-b border-cyber-800 pb-2">
+              <span class="text-slate-500">Semester:</span>
+              <span class="text-white font-semibold">Spring 2026</span>
+            </li>
+            <li class="flex justify-between border-b border-cyber-800 pb-2">
+              <span class="text-slate-500">Professor:</span>
+              <span class="text-sky-400 font-semibold">Reda Nacif Elalaoui</span>
+            </li>
+            <li class="flex justify-between">
+              <span class="text-slate-500">Research Group 2:</span>
+              <span class="text-emerald-400 font-semibold">Vishal Patel | Saunil Patel</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 border border-cyber-800 space-y-4">
+          <h3 class="text-base font-bold text-white font-mono flex items-center gap-2">
+            <i data-lucide="database" class="w-4 h-4 text-indigo-400"></i>
+            <span>FaceForensics++ Dataset Taxonomy</span>
+          </h3>
+          <p class="text-xs text-slate-400 leading-relaxed">Evaluation performed on 1,000 video sequences compressed with H.264 (c23 compression quality) across four distinct manipulation categories:</p>
+          <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+            <div class="p-2.5 rounded-lg bg-cyber-900 border border-cyber-800">
+              <span class="text-sky-400 font-semibold block">Deepfakes</span>
+              <span class="text-[11px] text-slate-500">Autoencoder-based facial synthesis</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-cyber-900 border border-cyber-800">
+              <span class="text-indigo-400 font-semibold block">Face2Face</span>
+              <span class="text-[11px] text-slate-500">Facial reenactment transfer</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-cyber-900 border border-cyber-800">
+              <span class="text-emerald-400 font-semibold block">FaceSwap</span>
+              <span class="text-[11px] text-slate-500">Graphic-based 3D face swapping</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-cyber-900 border border-cyber-800">
+              <span class="text-amber-400 font-semibold block">NeuralTextures</span>
+              <span class="text-[11px] text-slate-500">Rendering with neural loss</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="relative z-10 border-t border-cyber-800/80 bg-cyber-900/60 py-6 px-4 text-center text-xs font-mono text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p>VeritasAI // Deepfake Detection Lab &bull; FaceForensics++ Research</p>
+      <p>Group 2: Vishal Patel &amp; Saunil Patel &bull; Long Island University (Spring 2026)</p>
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

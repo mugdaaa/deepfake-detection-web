@@ -1,0 +1,131 @@
+/* VeritasAI // Deepfake Detection Lab Custom Stylesheet */
+
+/* Background Cyber Grid */
+.cyber-grid {
+  background-image: 
+    linear-gradient(to right, rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Glowing Ambient Orbs */
+.glow-orb {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  filter: blur(140px);
+  pointer-events: none;
+}
+
+/* Glassmorphism Surface */
+.glass-card {
+  background: rgba(17, 26, 48, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+/* Custom Range Slider */
+.cyber-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 4px;
+  background: #1F315B;
+  outline: none;
+  transition: opacity 0.2s;
+}
+
+.cyber-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #38BDF8;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+  border: 2px solid #070A12;
+  transition: transform 0.15s ease;
+}
+
+.cyber-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Nav Tab Active States */
+.nav-tab.active {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.2));
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38BDF8;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+}
+
+/* Confusion Matrix Button Active */
+.cm-tab.active {
+  background: #38BDF8;
+  color: #070A12;
+  font-weight: 700;
+}
+
+/* Frame Card Hover in Carousel */
+.frame-card {
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.frame-card:hover {
+  transform: translateY(-2px);
+  border-color: #38BDF8;
+}
+
+.frame-card.active-frame {
+  border-color: #38BDF8;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+/* Custom Thin Scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(13, 19, 34, 0.6);
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #1F315B;
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #38BDF8;
+}
+
+/* Progress bar animation */
+@keyframes progressIndeterminate {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(30%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-progress {
+  animation: progressIndeterminate 1.5s infinite ease-in-out;
+}
+
+/* Reverse spin for outer scanner ring */
+@keyframes spinReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+.animate-reverse {
+  animation: spinReverse 3s linear infinite;
+}
