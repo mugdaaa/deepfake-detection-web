@@ -50,7 +50,7 @@ RESEARCH_ASSETS = {
     "sample_fake_video": "gradcam_fake_output.mp4"
 }
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def read_root():
     index_path = os.path.join(STATIC_DIR, "index.html")
     if os.path.exists(index_path):
@@ -66,7 +66,7 @@ def get_research_asset(asset_name: str):
         return FileResponse(file_path, media_type=media_type)
     raise HTTPException(status_code=404, detail="Asset not found")
 
-@app.get("/api/health")
+@app.api_route("/api/health", methods=["GET", "HEAD"])
 def get_health():
     return {
         "status": "online",
