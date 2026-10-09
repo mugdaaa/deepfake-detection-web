@@ -1,5 +1,4 @@
 import os
-import json
 import shutil
 import tempfile
 from typing import Optional
@@ -14,17 +13,6 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 TEMP_DIR = os.path.join(BASE_DIR, "temp_uploads")
 os.makedirs(STATIC_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
-
-# Load precomputed sample cache for instant responses on cloud/Render free tier
-SAMPLE_CACHE = {}
-cache_file = os.path.join(BASE_DIR, "sample_cache.json")
-if os.path.exists(cache_file):
-    try:
-        with open(cache_file, "r") as f:
-            SAMPLE_CACHE = json.load(f)
-        print(f"Loaded {len(SAMPLE_CACHE)} precomputed samples from cache.")
-    except Exception as e:
-        print(f"Notice: could not load sample cache: {e}")
 
 app = FastAPI(
     title="Deepfake Detection - FaceForensics++ Lab",
@@ -85,7 +73,8 @@ def get_health():
         "detector_ready": detector.is_ready,
         "efficientnet_loaded": detector.eff_model is not None,
         "xception_loaded": detector.xception_model is not None,
-        "gradcam_ready": detector.grad_model is not None
+        "gradcam_ready": detector.grad_model is not None,
+        "load_error": detector.load_error
     }
 
 @app.get("/api/samples")
@@ -211,7 +200,7 @@ def get_metrics():
     }
 
 @app.post("/api/predict")
-def predict_media(
+async def predict_media(
     file: UploadFile = File(...),
     num_frames: int = Form(10),
     apply_mask: bool = Form(False),
@@ -269,24 +258,13 @@ def predict_media(
                 pass
 
 @app.post("/api/predict-sample")
-def predict_sample(
+async def predict_sample(
     sample_id: str = Form(...),
     num_frames: int = Form(10),
     apply_mask: bool = Form(False),
     generate_heatmap: bool = Form(True),
     threshold: float = Form(0.50)
 ):
-    # If cached, return immediately with dynamic threshold recalculation
-    if sample_id in SAMPLE_CACHE and not apply_mask:
-        cached = dict(SAMPLE_CACHE[sample_id])
-        avg_prob = cached.get("fake_probability", 0.5)
-        verdict = "FAKE" if avg_prob >= threshold else "REAL"
-        confidence = (avg_prob if verdict == "FAKE" else (1.0 - avg_prob)) * 100.0
-        cached["verdict"] = verdict
-        cached["confidence"] = round(confidence, 2)
-        cached["threshold_used"] = threshold
-        return cached
-
     filename = RESEARCH_ASSETS.get(sample_id)
     if not filename:
         raise HTTPException(status_code=404, detail="Unknown sample ID")

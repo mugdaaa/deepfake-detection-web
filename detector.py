@@ -3,10 +3,19 @@ import io
 import base64
 import cv2
 import numpy as np
-import tensorflow as tf
 
 # Suppress noisy TF logs
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+try:
+    import tensorflow as tf
+    TF_AVAILABLE = True
+    TF_ERROR = None
+except Exception as e:
+    tf = None
+    TF_AVAILABLE = False
+    TF_ERROR = str(e)
+    print(f"Warning: TensorFlow could not be imported ({e}).")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FF_DATASET_DIR = os.path.join(BASE_DIR, "FF_Dataset")
@@ -19,12 +28,14 @@ class DeepfakeDetector:
         self.eff_model = None
         self.xception_model = None
         self.grad_model = None
+        self.load_error = TF_ERROR
         
         # Load OpenCV Face Detector
         cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
         self.face_cascade = cv2.CascadeClassifier(cascade_path)
         
-        self._load_models()
+        if TF_AVAILABLE:
+            self._load_models()
 
     def _load_models(self):
         if os.path.exists(self.efficientnet_path):
@@ -205,9 +216,7 @@ class DeepfakeDetector:
                 "fallback_crop": True
             })
         else:
-            # Sort boxes by area descending and process top 2 most prominent faces for speed
-            sorted_boxes = sorted(boxes, key=lambda b: b[2] * b[3], reverse=True)[:2]
-            for idx, (x, y, fw, fh) in enumerate(sorted_boxes):
+            for idx, (x, y, fw, fh) in enumerate(boxes):
                 # Add slight margin to capture face boundary artifacts
                 margin = int(0.15 * max(fw, fh))
                 x1 = max(0, x - margin)
@@ -261,7 +270,7 @@ class DeepfakeDetector:
             cap.release()
             raise ValueError("Video has 0 frames or is corrupt")
 
-        frame_indices = np.linspace(0, total_frames - 1, min(max(3, num_frames), min(8, total_frames)), dtype=int)
+        frame_indices = np.linspace(0, total_frames - 1, min(num_frames, total_frames), dtype=int)
         
         frames_data = []
         all_probs = []
